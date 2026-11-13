@@ -15,7 +15,8 @@
 
 <p align="center">
   <a href="https://www.linkedin.com/in/shreya-sherikar">LinkedIn</a> ·
-  <a href="mailto:shreyasherikar18@gmail.com">Email</a>
+  <a href="mailto:shreyasherikar18@gmail.com">Email</a> ·
+  <a href="assets/Shreya_Sherikar_Resume.pdf">Resume (PDF)</a>
 </p>
 
 ---
@@ -28,7 +29,7 @@
 | **[NEXUS](https://github.com/shreysherikar/Nexus)** | Network incident management: fault simulation, detection, root-cause analysis, SLAs | Python · FastAPI · React · PostgreSQL |
 | **[Scasi AI](https://github.com/shreysherikar/Scasi_AI)** | Multi-agent email assistant with RAG search. [Live](https://scasiaiworks-ev3y.vercel.app/) | Next.js · Supabase · pgvector · LLM APIs |
 | **[ThreadForge](https://github.com/shreysherikar/ThreadForge)** | Multithreaded priority task scheduler | C++17 · CMake · GoogleTest |
-| **forge** | AI-assisted engineering CLI: plan, review, docs and commit workflows with a test-gated ship pipeline | Python |
+| **[forge](https://github.com/shreysherikar/forge)** | AI-assisted engineering CLI: plan, review, docs and commit workflows with a test-gated ship pipeline | Python |
 
 ## How I build
 
@@ -43,7 +44,7 @@
 ## Featured projects
 
 ### ApprovalIQ · regulatory clearance orchestration
-*Team of 4 · 1st Runner-up, Smart India Hackathon 2026 (internal round) · [Live demo](https://approval-iq-web.vercel.app/) · [Source](https://github.com/shreysherikar/Approval-IQ)*
+*Team of 4 · 1st Runner-up, Smart India Hackathon 2026 (internal round) · [Live demo](https://approval-iq-web.vercel.app/) · [Source](https://github.com/shreysherikar/Approval-IQ) · [Architecture docs](https://github.com/shreysherikar/Approval-IQ/tree/HEAD/docs/architecture)*
 
 <a href="https://approval-iq-web.vercel.app/"><img src="assets/approvaliq.png" alt="ApprovalIQ landing page" width="720"/></a>
 
@@ -93,7 +94,7 @@ flowchart LR
 - **Benchmarked against ground truth.** Precision, recall, F1, mean time to detect, and root-cause accuracy are computed per scenario.
 - **Incident lifecycle with SLAs:** state machine, audit timeline, MTTA/MTTR, a FastAPI REST + WebSocket backend and a React operations dashboard.
 
-`Python` `FastAPI` `SQLAlchemy` `Alembic` `PostgreSQL` `React` `TypeScript` `pytest` `Vitest`
+`Python` `FastAPI` `SQLAlchemy` `Alembic` `PostgreSQL` `React` `TypeScript` `pytest` `Vitest` · 27-node reference network, 26 transport links, 5 fault scenarios, 8 detection rules
 
 ---
 
@@ -114,7 +115,7 @@ An email assistant that classifies, summarizes, prioritizes and drafts replies, 
 ---
 
 ### ThreadForge · multithreaded priority task scheduler
-*Solo project · [Source](https://github.com/shreysherikar/ThreadForge)*
+*Solo project · [Source](https://github.com/shreysherikar/ThreadForge) · [Design docs](https://github.com/shreysherikar/ThreadForge/tree/HEAD/docs)*
 
 A C++17 task scheduler: priority queue, fixed worker pool, typed futures and a defined shutdown contract.
 
@@ -124,6 +125,20 @@ A C++17 task scheduler: priority queue, fixed worker pool, typed futures and a d
 - 31 unit tests, zero compiler warnings, and ASan/TSan configured in CI.
 
 `C++17` `CMake` `GoogleTest` `GitHub Actions`
+
+---
+
+### forge · AI-assisted engineering CLI
+*Solo project · [Source](https://github.com/shreysherikar/forge)*
+
+A command-line tool that handles the text-heavy parts of an engineering workflow (planning, code review, doc updates, commit messages, project scaffolding) with a separate LLM assigned to each role.
+
+- **Role-based model routing:** plan, review, docs and commit roles each map to a configurable model through OpenAI-compatible provider endpoints, with a live check of each key as it is configured.
+- **Test-gated shipping:** `forge ship` runs tests, review, docs, commit and push in order, and never pushes when tests fail.
+- **Stack-aware testing:** detects and runs pytest, npm (Vitest/Jest), cargo or go test suites.
+- **Deliberate scope:** it does not write multi-file code, leaving that to editors with diff preview and undo; the README explains the boundary.
+
+`Python` `CLI` `LLM APIs` `Git` `GitHub CLI`
 
 ---
 
