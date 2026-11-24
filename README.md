@@ -4,7 +4,7 @@
 
 <p align="center">
   <b>Backend &amp; AI developer</b> · Final-year B.Tech CSE, Amity University Bengaluru<br/>
-  I build systems where correctness matters: rules engines, concurrency, and LLM pipelines with guardrails.
+  I build systems where correctness matters: rules engines, concurrency, observability, and LLM pipelines with guardrails.
 </p>
 
 <p align="center">
@@ -26,10 +26,10 @@
 | Project | What it is | Built with |
 |---|---|---|
 | **[ApprovalIQ](https://github.com/shreysherikar/Approval-IQ)** | Regulatory clearance orchestration with AI document verification. [Live](https://approval-iq-web.vercel.app/) | TypeScript · NestJS · React · PostgreSQL |
-| **[NEXUS](https://github.com/shreysherikar/Nexus)** | Network incident management: fault simulation, detection, root-cause analysis, SLAs | Python · FastAPI · React · PostgreSQL |
+| **[NEXUS](https://github.com/shreysherikar/Nexus)** | Network incident platform: topology-aware alarm correlation, explainable root-cause analysis, SLA tracking, Prometheus + Grafana observability | Python · FastAPI · React · PostgreSQL · Docker |
 | **[Scasi AI](https://github.com/shreysherikar/Scasi_AI)** | Multi-agent email assistant with RAG search. [Live](https://scasiaiworks-ev3y.vercel.app/) | Next.js · Supabase · pgvector · LLM APIs |
 | **[ThreadForge](https://github.com/shreysherikar/ThreadForge)** | Multithreaded priority task scheduler | C++17 · CMake · GoogleTest |
-| **[forge](https://github.com/shreysherikar/forge)** | AI-assisted engineering CLI: plan, review, docs and commit workflows with a test-gated ship pipeline | Python |
+| **[forge](https://github.com/shreysherikar/forge)** | AI-assisted engineering CLI with a test-gated ship pipeline | Python |
 
 ## How I build
 
@@ -37,7 +37,7 @@
 - **Honest evaluation.** NEXUS's detectors never see the injected faults they're scored against.
 - **Measured performance.** ThreadForge is benchmarked across CPU-bound and I/O-bound workloads to show where parallelism pays off.
 
-**Currently:** extending NEXUS with Prometheus metrics export and Grafana dashboards.
+**Latest:** NEXUS v1.0 shipped. The full stack (API, dashboard, Postgres, Prometheus, Grafana) starts with one `docker compose up`.
 
 ---
 
@@ -72,29 +72,33 @@ flowchart LR
 ---
 
 ### NEXUS · network incident management platform
-*Solo project · [Source](https://github.com/shreysherikar/Nexus)*
+*Solo project · v1.0 · [Source](https://github.com/shreysherikar/Nexus)*
 
-A telecom network operations platform with its own simulation engine, so it needs no live carrier feeds or hardware. It generates telemetry, injects faults, detects anomalies, correlates alarms, diagnoses root causes, and tracks incidents against SLAs.
+When one fiber link fails in a carrier network, hundreds of downstream cells raise alarms at once. NEXUS collapses that storm into a single diagnosed incident. It ships with its own simulation engine, so it needs no live carrier feeds or hardware: it generates telemetry, injects faults, detects anomalies, correlates alarms by network topology, diagnoses root causes, and tracks incidents against SLAs.
 
 ```mermaid
 flowchart LR
-    F["Fault injection"] --> T["Synthetic telemetry"]
+    F["Fault injection<br/>6 scenarios"] --> T["Synthetic telemetry"]
     T --> D["Detection<br/>thresholds, MAD, EWMA"]
-    D --> C["Alarm correlation"]
+    D --> C["Topology-aware<br/>alarm correlation"]
     C --> R["Root-cause analysis"]
-    R --> I["Incidents + SLAs"]
+    R --> I["Incidents + SLAs<br/>PostgreSQL"]
+    I --> W["WebSocket → React NOC dashboard"]
+    I --> P["/metrics → Prometheus → Grafana"]
     D --> V["Evaluation"]
     R --> V
     F -.->|ground truth| V
 ```
 
-- **Hierarchical network model** (Core → Aggregation → Site → Cell) with validation, cycle detection and a transport-link layer.
-- **Detection with no access to ground truth.** Threshold rules with hysteresis, plus rolling-median (MAD) and EWMA statistical detectors, run without importing the injected-fault records.
-- **Alarm correlation and explainable root-cause analysis.** Alarms are clustered using the topology, with lowest-common-ancestor resolution. Rule-based diagnosis scores evidence and reports its sources.
+- **Alarm storms become one incident.** Correlation clusters alarms by lowest common ancestor in the network tree, with a bounded time window, a hop-distance limit and distant-core suppression, so unrelated branches never merge at the core router.
+- **Explainable root-cause analysis.** Rule-based diagnosis scores competing hypotheses, separates a failed node from a failed transport link, cites the telemetry behind each score, and returns an explicit `UNKNOWN` instead of guessing.
+- **Detection with no access to ground truth.** Threshold rules with hysteresis, plus rolling-median (MAD) and EWMA detectors. Anomalous samples are excluded from baseline updates so faults can't poison the baseline.
 - **Benchmarked against ground truth.** Precision, recall, F1, mean time to detect, and root-cause accuracy are computed per scenario.
-- **Incident lifecycle with SLAs:** state machine, audit timeline, MTTA/MTTR, a FastAPI REST + WebSocket backend and a React operations dashboard.
+- **Operational lifecycle.** Incident state machine, append-only audit timeline, SLA deadlines, severity set by blast radius rather than model confidence, and MTTA/MTTR tracking.
+- **Real-time and observable.** FastAPI REST + WebSocket with backpressure-bounded queues, a React operations dashboard, and 5 auto-provisioned Grafana dashboards fed by low-cardinality Prometheus metrics.
+- **Verified end to end.** 573 backend tests, 69 frontend tests, and a 25-check live acceptance script.
 
-`Python` `FastAPI` `SQLAlchemy` `Alembic` `PostgreSQL` `React` `TypeScript` `pytest` `Vitest` · 27-node reference network, 26 transport links, 5 fault scenarios, 8 detection rules
+`Python` `FastAPI` `SQLAlchemy` `Alembic` `PostgreSQL` `React` `TypeScript` `Prometheus` `Grafana` `Docker Compose` `pytest` `Vitest` · 27-node reference network, 26 transport links, 6 fault scenarios
 
 ---
 
@@ -131,12 +135,7 @@ A C++17 task scheduler: priority queue, fixed worker pool, typed futures and a d
 ### forge · AI-assisted engineering CLI
 *Solo project · [Source](https://github.com/shreysherikar/forge)*
 
-A command-line tool that handles the text-heavy parts of an engineering workflow (planning, code review, doc updates, commit messages, project scaffolding) with a separate LLM assigned to each role.
-
-- **Role-based model routing:** plan, review, docs and commit roles each map to a configurable model through OpenAI-compatible provider endpoints, with a live check of each key as it is configured.
-- **Test-gated shipping:** `forge ship` runs tests, review, docs, commit and push in order, and never pushes when tests fail.
-- **Stack-aware testing:** detects and runs pytest, npm (Vitest/Jest), cargo or go test suites.
-- **Deliberate scope:** it does not write multi-file code, leaving that to editors with diff preview and undo; the README explains the boundary.
+A command-line tool that handles the text-heavy parts of an engineering workflow (planning, code review, docs, commit messages) with a separate LLM assigned to each role. `forge ship` runs tests, review, docs, commit and push in order, and never pushes when tests fail. Stack-aware: detects pytest, npm, cargo or go test suites.
 
 `Python` `CLI` `LLM APIs` `Git` `GitHub CLI`
 
@@ -157,7 +156,7 @@ A command-line tool that handles the text-heavy parts of an engineering workflow
 | **AI / LLM** | Claude / Gemini / Groq APIs · RAG · multi-agent orchestration · LLM evaluation |
 | **Data** | PostgreSQL · pgvector · SQLAlchemy · Prisma · Alembic |
 | **Frontend** | React · Next.js · Tailwind CSS |
-| **Tooling** | Docker · GitHub Actions · pytest · Jest · Vitest · CMake |
+| **Observability & tooling** | Prometheus · Grafana · Docker Compose · GitHub Actions · pytest · Jest · Vitest · CMake |
 
 ## Certifications
 
