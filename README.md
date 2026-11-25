@@ -76,6 +76,8 @@ flowchart LR
 
 When one fiber link fails in a carrier network, hundreds of downstream cells raise alarms at once. NEXUS collapses that storm into a single diagnosed incident. It ships with its own simulation engine, so it needs no live carrier feeds or hardware: it generates telemetry, injects faults, detects anomalies, correlates alarms by network topology, diagnoses root causes, and tracks incidents against SLAs.
 
+<img src="assets/nexus-incident.png" alt="NEXUS NOC console: incidents with root-cause hypotheses, confidence and SLA status" width="720"/>
+
 ```mermaid
 flowchart LR
     F["Fault injection<br/>6 scenarios"] --> T["Synthetic telemetry"]
@@ -92,11 +94,11 @@ flowchart LR
 
 - **Alarm storms become one incident.** Correlation clusters alarms by lowest common ancestor in the network tree, with a bounded time window, a hop-distance limit and distant-core suppression, so unrelated branches never merge at the core router.
 - **Explainable root-cause analysis.** Rule-based diagnosis scores competing hypotheses, separates a failed node from a failed transport link, cites the telemetry behind each score, and returns an explicit `UNKNOWN` instead of guessing.
-- **Detection with no access to ground truth.** Threshold rules with hysteresis, plus rolling-median (MAD) and EWMA detectors. Anomalous samples are excluded from baseline updates so faults can't poison the baseline.
-- **Benchmarked against ground truth.** Precision, recall, F1, mean time to detect, and root-cause accuracy are computed per scenario.
+- **Detection with no access to ground truth.** Threshold rules with hysteresis, plus rolling-median (MAD) and EWMA detectors that know which direction is bad for each KPI (higher availability is never a fault). Baselines are seeded from nominal profiles, anomalous samples never update them, and alarms clear only after two consecutive healthy samples.
+- **Benchmarked against ground truth.** On the 6 built-in scenarios (synthetic, seed 42, fully deterministic): 6/6 faults detected, 94.5% alarm precision, 6/6 root causes diagnosed (cause and target), and 704 alarms reduced to 38 correlation groups. Not validated on real carrier telemetry.
 - **Operational lifecycle.** Incident state machine, append-only audit timeline, SLA deadlines, severity set by blast radius rather than model confidence, and MTTA/MTTR tracking.
 - **Real-time and observable.** FastAPI REST + WebSocket with backpressure-bounded queues, a React operations dashboard, and 5 auto-provisioned Grafana dashboards fed by low-cardinality Prometheus metrics.
-- **Verified end to end.** 573 backend tests, 69 frontend tests, and a 25-check live acceptance script.
+- **Verified end to end.** 597 backend tests, 69 frontend tests, and a live acceptance script that runs all 6 fault scenarios and validates all 23 Grafana panel queries.
 
 `Python` `FastAPI` `SQLAlchemy` `Alembic` `PostgreSQL` `React` `TypeScript` `Prometheus` `Grafana` `Docker Compose` `pytest` `Vitest` · 27-node reference network, 26 transport links, 6 fault scenarios
 
